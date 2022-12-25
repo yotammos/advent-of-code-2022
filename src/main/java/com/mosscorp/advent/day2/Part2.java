@@ -5,7 +5,7 @@ import com.mosscorp.advent.Common;
 import java.util.List;
 import java.util.Map;
 
-public class Part1 {
+public class Part2 {
 
     public static void main(String[] args) {
         final List<String> lines = Common.readTestData("src/main/resources/day2.txt");
@@ -16,9 +16,9 @@ public class Part1 {
 
     private static long totalPoints(final List<String> lines) {
         return lines.stream().map(line -> {
-            final char move = line.charAt(2);
+            final char wantedResult = line.charAt(2);
             final char opponentMove = line.charAt(0);
-            return (long) scoreRound(move, opponentMove);
+            return (long) scoreRound(opponentMove, wantedResult);
         }).reduce(Long::sum).orElse(0L);
     }
 
@@ -46,7 +46,26 @@ public class Part1 {
             )
     );
 
-    private static int scoreRound(final char move, final char opponentMove) {
+    private static final Map<Character, Map<Character, Character>> WANTED_RESULT_MOVE_MAP = Map.of(
+            WantedResult.Win.getCharValue(), Map.of(
+                    OpponentMove.Rock.getCharValue(), Move.Paper.getCharValue(),
+                    OpponentMove.Paper.getCharValue(), Move.Scissors.getCharValue(),
+                    OpponentMove.Scissors.getCharValue(), Move.Rock.getCharValue()
+            ),
+            WantedResult.Draw.getCharValue(), Map.of(
+                    OpponentMove.Rock.getCharValue(), Move.Rock.getCharValue(),
+                    OpponentMove.Paper.getCharValue(), Move.Paper.getCharValue(),
+                    OpponentMove.Scissors.getCharValue(), Move.Scissors.getCharValue()
+            ),
+            WantedResult.Lose.getCharValue(), Map.of(
+                    OpponentMove.Rock.getCharValue(), Move.Scissors.getCharValue(),
+                    OpponentMove.Paper.getCharValue(), Move.Rock.getCharValue(),
+                    OpponentMove.Scissors.getCharValue(), Move.Paper.getCharValue()
+            )
+    );
+
+    private static int scoreRound(final char opponentMove, final char wantedResult) {
+        final char move = WANTED_RESULT_MOVE_MAP.get(wantedResult).get(opponentMove);
         return MOVE_VALUE_MAP.get(move) + ROUND_VALUE_MAP.get(move).get(opponentMove);
     }
 }
