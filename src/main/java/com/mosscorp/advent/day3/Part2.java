@@ -2,11 +2,13 @@ package com.mosscorp.advent.day3;
 
 import com.mosscorp.advent.Common;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-public class Part1 {
+public class Part2 {
     public static void main(String[] args) {
         final List<String> lines = Common.readTestData("src/main/resources/day3.txt");
         final long itemPrioritiesSum = itemPrioritiesSum(lines);
@@ -15,15 +17,18 @@ public class Part1 {
     }
 
     private static long itemPrioritiesSum(final List<String> lines) {
-        return lines.stream().map(line -> {
-            final String sack1 = line.substring(0, line.length() / 2);
-            final String sack2 = line.substring(line.length() / 2);
+        long total = 0L;
+        for (int i = 0; i < lines.size() - 2; i += 3) {
+            final char commonItem = findCommonItem(
+                    lines.get(i),
+                    lines.get(i + 1),
+                    lines.get(i + 2)
+            );
 
-            final char commonItem = findCommonItem(sack1, sack2);
-            return (long) getItemValue(commonItem);
-        })
-                .reduce(Long::sum)
-                .orElse(0L);
+            total += getItemValue(commonItem);
+        }
+
+        return total;
     }
 
     private static int getItemValue(final char item) {
@@ -31,19 +36,39 @@ public class Part1 {
         return isLowerCase ? item - 'a' + 1 : item - 'A' + 27;
     }
 
-    private static char findCommonItem(final String sack1, final String sack2) {
-        final Set<Character> itemSet = new HashSet<>();
+    private static char findCommonItem(final String sack1, final String sack2, final String sack3) {
+        final Set<Character> itemSet1 = toItemSet(sack1);
+        final Set<Character> itemSet2 = toItemSet(sack2);
+        final Set<Character> itemSet3 = toItemSet(sack3);
 
-        for (char item : sack1.toCharArray()) {
+        final Map<Character, Integer> itemCount = new HashMap<>();
+        for (char item : itemSet1) {
+            itemCount.putIfAbsent(item, 0);
+            itemCount.put(item, itemCount.get(item) + 1);
+        }
+        for (char item : itemSet2) {
+            itemCount.putIfAbsent(item, 0);
+            itemCount.put(item, itemCount.get(item) + 1);
+        }
+        for (char item : itemSet3) {
+            itemCount.putIfAbsent(item, 0);
+            itemCount.put(item, itemCount.get(item) + 1);
+        }
+
+        return itemCount
+                .entrySet()
+                .stream()
+                .filter(entry -> entry.getValue() == 3)
+                .findFirst()
+                .map(Map.Entry::getKey)
+                .orElseThrow(() -> new RuntimeException("Failed to find common item!"));
+    }
+
+    private static Set<Character> toItemSet(final String sack) {
+        final Set<Character> itemSet = new HashSet<>();
+        for (char item : sack.toCharArray()) {
             itemSet.add(item);
         }
-
-        for (char item : sack2.toCharArray()) {
-            if (itemSet.contains(item)) {
-                return item;
-            }
-        }
-
-        throw new RuntimeException("Failed to find common item!");
+        return itemSet;
     }
 }
